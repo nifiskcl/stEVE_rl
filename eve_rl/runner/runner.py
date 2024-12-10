@@ -18,6 +18,7 @@ class Runner(EveRLObject):
         results_file: str,
         quality_info: Optional[str] = None,
         info_results: Optional[List[str]] = None,
+        save_config_to_checkpoint: bool = True,
     ) -> None:
         self.agent = agent
         self.heatup_action_low = heatup_action_low
@@ -27,6 +28,7 @@ class Runner(EveRLObject):
         self.results_file = results_file
         self.quality_info = quality_info
         self.info_results = info_results or []
+        self.save_config_to_checkpoint = save_config_to_checkpoint
         self.logger = logging.getLogger(self.__module__)
 
         self._results = {
@@ -133,12 +135,16 @@ class Runner(EveRLObject):
         eval_results.pop("best quality")
         eval_results.pop("best explore steps")
 
-        self.agent.save_checkpoint(checkpoint_file, eval_results)
+        self.agent.save_checkpoint(
+            checkpoint_file, eval_results, self.save_config_to_checkpoint
+        )
         if save_best:
             checkpoint_file = os.path.join(
                 self.checkpoint_folder, "best_checkpoint.everl"
             )
-            self.agent.save_checkpoint(checkpoint_file, eval_results)
+            self.agent.save_checkpoint(
+                checkpoint_file, eval_results, self.save_config_to_checkpoint
+            )
 
         log_info = (
             f"Quality: {quality}, Reward: {reward}, Exploration steps: {explore_steps}"

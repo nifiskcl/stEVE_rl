@@ -146,8 +146,7 @@ class AgentEvalOnly(EveRLObject, ABC):
         episode_limit: Optional[int] = None,
         seeds: Optional[List[int]] = None,
         options: Optional[List[Dict[str, Any]]] = None,
-    ) -> List[Episode]:
-        ...
+    ) -> List[Episode]: ...
 
     def load_checkpoint(self, file_path: str) -> None:
         checkpoint = torch.load(file_path)
@@ -268,8 +267,7 @@ class Agent(AgentEvalOnly, ABC):
         episode_limit: Optional[int] = None,
         custom_action_low: Optional[List[float]] = None,
         custom_action_high: Optional[List[float]] = None,
-    ) -> List[Episode]:
-        ...
+    ) -> List[Episode]: ...
 
     @abstractmethod
     def explore(
@@ -279,14 +277,12 @@ class Agent(AgentEvalOnly, ABC):
         episodes: Optional[int] = None,
         step_limit: Optional[int] = None,
         episode_limit: Optional[int] = None,
-    ) -> List[Episode]:
-        ...
+    ) -> List[Episode]: ...
 
     @abstractmethod
     def update(
         self, *, steps: Optional[int] = None, step_limit: Optional[int] = None
-    ) -> List[List[float]]:
-        ...
+    ) -> List[List[float]]: ...
 
     @abstractmethod
     def explore_and_update(
@@ -298,8 +294,7 @@ class Agent(AgentEvalOnly, ABC):
         explore_episode_limit: Optional[int] = None,
         update_steps: Optional[int] = None,
         update_step_limit: Optional[int] = None,
-    ) -> Tuple[List[Episode], List[float]]:
-        ...
+    ) -> Tuple[List[Episode], List[float]]: ...
 
     @abstractmethod
     def evaluate(
@@ -311,26 +306,27 @@ class Agent(AgentEvalOnly, ABC):
         episode_limit: Optional[int] = None,
         seeds: Optional[List[int]] = None,
         options: Optional[List[Dict[str, Any]]] = None,
-    ) -> List[Episode]:
-        ...
+    ) -> List[Episode]: ...
 
     @abstractmethod
-    def close(self) -> None:
-        ...
+    def close(self) -> None: ...
 
     def save_checkpoint(
-        self, file_path, additional_info: Optional[Dict] = None
+        self,
+        file_path,
+        additional_info: Optional[Dict] = None,
+        save_config: bool = True,
     ) -> None:
-        algo_config = self.algo.get_config_dict()
-        replay_config = self.replay_buffer.get_config_dict()
+        algo_config = self.algo.get_config_dict() if save_config else None
+        replay_config = self.replay_buffer.get_config_dict() if save_config else None
         env_eval_config = (
             self.env_eval.get_config_dict()
-            if hasattr(self.env_train, "get_config_dict")
+            if save_config and hasattr(self.env_train, "get_config_dict")
             else None
         )
         env_train_config = (
             self.env_eval.get_config_dict()
-            if hasattr(self.env_train, "get_config_dict")
+            if save_config and hasattr(self.env_train, "get_config_dict")
             else None
         )
 
