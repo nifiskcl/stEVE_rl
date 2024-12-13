@@ -79,7 +79,7 @@ class SACPlayOnly(AlgoPlayOnly):
             action = action.squeeze(0).squeeze(0).cpu().detach().numpy()
         return action * self.action_scaling
     
-    def get_action_eval(self, flat_state: np.ndarray) -> np.ndarray:
+    def get_action_evaluation(self, flat_state: np.ndarray) -> np.ndarray:
         with torch.no_grad():
             torch_state = torch.as_tensor(
                 flat_state, dtype=torch.float32, device=self.device
