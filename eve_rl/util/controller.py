@@ -85,6 +85,21 @@ class Controller:
         obs, _ = self.env.step(self.last_action)
         self.last_action = self._get_action(obs)
         return self.last_action, obs
+    
+    def step_action_mean_std(
+        self,
+        tracking: Union[np.ndarray, List[np.ndarray]],
+        target: np.ndarray,
+        device_lengths_inserted: Optional[List[float]] = None,
+        custom_action: np.ndarray = None,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        if custom_action is not None:
+            self.last_action = custom_action
+        self._update_tracking_target_lengths(tracking, target, device_lengths_inserted)
+
+        obs, _ = self.env.step(self.last_action)
+        self.last_action, mean, std = self._get_action_and_mean_std(obs)
+        return self.last_action, obs, mean, std
 
     def reset(
         self,
@@ -98,6 +113,19 @@ class Controller:
         self.agent.algo.reset()
         self.last_action = self._get_action(obs)
         return self.last_action, obs
+    
+    def reset_action_mean_std(
+        self,
+        tracking: Union[np.ndarray, List[np.ndarray]],
+        target: np.ndarray,
+        device_lengths_inserted: Optional[List[float]] = None,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        self._update_tracking_target_lengths(tracking, target, device_lengths_inserted)
+        self.last_action *= 0.0
+        obs, _ = self.env.reset()
+        self.agent.algo.reset()
+        self.last_action, mean, std = self._get_action_and_mean_std(obs)
+        return self.last_action, obs, mean, std
 
     def _update_tracking_target_lengths(
         self,
@@ -139,3 +167,13 @@ class Controller:
             action *= self.intervention.action_space.high
         self.last_action = action
         return action
+    
+    def _get_action_and_mean_std(self, obs):
+        obs_flat, _ = flatten_obs(obs)
+        action , mean, std = self.agent.algo.get_action_evaluation(obs_flat)
+        action = action.reshape(self.last_action.shape)
+        if self.agent.normalize_actions:
+            action *= self.intervention.action_space.high
+        self.last_action = action
+        return action, mean, std
+
