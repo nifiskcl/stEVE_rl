@@ -16,6 +16,8 @@ class Controller:
         image_center: Optional[Tuple[float, float, float]] = None,
         field_of_view: Optional[Tuple[float, float]] = None,
         device: torch.device = torch.device("cpu"),
+        mean_current: float = None,
+        std_current: float = None,
     ) -> None:
         image_rot_zx = image_rot_zx or [0, 0]
         image_center = image_center or [0, 0, 0]
@@ -98,8 +100,8 @@ class Controller:
         self._update_tracking_target_lengths(tracking, target, device_lengths_inserted)
 
         obs, _ = self.env.step(self.last_action)
-        self.last_action, mean, std = self._get_action_and_mean_std(obs)
-        return self.last_action, obs, mean, std
+        self.last_action = self._get_action_and_mean_std(obs)
+        return self.last_action, obs
 
     def reset(
         self,
@@ -124,8 +126,8 @@ class Controller:
         self.last_action *= 0.0
         obs, _ = self.env.reset()
         self.agent.algo.reset()
-        self.last_action, mean, std = self._get_action_and_mean_std(obs)
-        return self.last_action, obs, mean, std
+        self.last_action = self._get_action_and_mean_std(obs)
+        return self.last_action, obs
 
     def _update_tracking_target_lengths(
         self,
@@ -175,5 +177,9 @@ class Controller:
         if self.agent.normalize_actions:
             action *= self.intervention.action_space.high
         self.last_action = action
-        return action, mean, std
+
+        self.mean_current = mean
+        self.std_current = std
+
+        return action
 
